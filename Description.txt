@@ -19,18 +19,14 @@ This contains the API's as follows. All the API's are defined and written follow
 Sample response
 {
     "decks": [
-
         {
-            "desc": "deck1", 
+            "desc": "deck1",
             "id": "1"
         }
-    ], 
-
-    "nextPageToken": 2, 
+    ],
+    "nextPageToken": 2,
     "resultSizeEstimate": 2
-
 }
-
 
 I assumed <username> as a dummy, so there is only one user. <numpages> is the number of pages to be retreived, with <numresults> results per page, and nextPageToken returns the next page of decks to be fetched. In my case, it is simply an integer pointing to the next page.
 The response is sliced according to the numpages, with nextPageToken appended. It is appended -1 if it was the last page. resultSizeEstimate is now dumb and is assigned the value <numpages> times <numresults>
@@ -39,26 +35,26 @@ The response is sliced according to the numpages, with nextPageToken appended. I
 
 It fetches the decks list with just the card ids listed, and uses those card id's to get the card information. <id> is assumed to be a number for simplicity.
 
-   Sample response
+Sample response
    
 {
     "cards": [
         {
-            "id": "1", 
+            "id": "1",
             "payload": {
                 "data": "data1"
-            }, 
+            },
             "title": "card1"
-        }, 
+        },
         {
-            "id": "2", 
+            "id": "2",
             "payload": {
                 "data": "data2"
-            }, 
+            },
             "title": "card2"
         }
-    ], 
-    "desc": "deck1", 
+    ],
+    "desc": "deck1",
     "id": "1"
 }
 
@@ -77,34 +73,32 @@ This contains the following API.All the API's are defined and written following 
 
 (1b). /users/<username>/combineddecks?pages=<numpages>&results=<numresults>&nextPageToken=<token>
 Sample Response
-{"nextPageToken": 2, 
-"resultSizeEstimate": 2, 
-"decks": 
-[
-  {"cards": 
-    [
-      {
-        "title": "card1",
-        "id": "1", 
-        "payload":
+{
+    "decks": [
         {
-          "data": "data1"
+            "cards": [
+                {
+                    "title": "card1",
+                    "id": "1",
+                    "payload": {
+                        "data": "data1"
+                    }
+                },
+                {
+                    "title": "card2",
+                    "id": "2",
+                    "payload": {
+                        "data": "data2"
+                    }
+                }
+            ],
+            "id": "1",
+            "desc": "deck1"
         }
-      },
-      {
-        "title": "card2", 
-        "id": "2",
-        "payload":
-        {
-          "data": "data2"
-        } 
-      } 
-    "id": "1", 
-    "desc": "deck1"
-    }
-  ]
+    ],
+    "nextPageToken": 2,
+    "resultSizeEstimate": 2
 }
-
 This returns all the decks for a user, with the card detailed info resolved.I assumed <username> as a dummy, so there is only one user. <numpages> is the number of pages to be retreived, with <numresults> results per page, and nextPageToken returns the next page of decks to be fetched. In my case, it is simply an integer pointing to the next page.	
 
 The way the API works it, we keep on incrementing nextPageToken until it is -1. For every nextPageToken we get, we call the API (1a) of vurb_api_nt.py
