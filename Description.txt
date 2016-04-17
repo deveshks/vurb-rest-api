@@ -1,0 +1,159 @@
+The API endpoints are created using Python flask-restful. We have the following files with 
+what they do described.
+
+data_generator.py->
+This files generated 3 pickle files to be consumed by the API and returned as response,
+
+1.cards.p, containing a dictionary of cards with key as card id and value as  card data, which contains id, title and payload
+
+2.decks.p, containing the list of decks for a user, with their id and desc
+
+3 deck.p, containing the data for a specific deck, with the deck id, desc and the list of card ids the deck has
+
+vurb_api.py->
+
+This contains the API's as follows. All the API's are defined and written following the standard of flask-restful package of Python Flask. All the id's are assumed to be numbers for simplicity
+
+(1a). /users/<username>/decks?pages=<numpages>&results=<numresults>&nextPageToken=<token>
+ lists all decks for a user
+Sample response
+{
+    "decks": [
+
+        {
+            "desc": "deck1", 
+            "id": "1"
+        }
+    ], 
+
+    "nextPageToken": 2, 
+    "resultSizeEstimate": 2
+
+}
+
+
+I assumed <username> as a dummy, so there is only one user. <numpages> is the number of pages to be retreived, with <numresults> results per page, and nextPageToken returns the next page of decks to be fetched. In my case, it is simply an integer pointing to the next page.
+The response is sliced according to the numpages, with nextPageToken appended. It is appended -1 if it was the last page. resultSizeEstimate is now dumb and is assigned the value <numpages> times <numresults>
+
+(2a). /decks/<id> gets the specific deck, with the contained cards information expanded.
+
+It fetches the decks list with just the card ids listed, and uses those card id's to get the card information. <id> is assumed to be a number for simplicity.
+
+   Sample response
+   
+{
+    "cards": [
+        {
+            "id": "1", 
+            "payload": {
+                "data": "data1"
+            }, 
+            "title": "card1"
+        }, 
+        {
+            "id": "2", 
+            "payload": {
+                "data": "data2"
+            }, 
+            "title": "card2"
+        }
+    ], 
+    "desc": "deck1", 
+    "id": "1"
+}
+
+(3a). /decksalt/<id> gets the specific decks, with only the card id's listed
+   Sample response 
+{
+    	"cardIds": ["1", "2" ],
+	"desc": "deck1", 
+ 	"id": "1"
+}
+
+(4a). /cards/<cardIdStr> gets a list of  cards detailed info, given the list of comma separated card id's in <cardIdStr
+
+vurb_combined_api_nt.py->
+This contains the following API.All the API's are defined and written following the standard of flask-restful package of Python Flask
+
+(1b). /users/<username>/combineddecks?pages=<numpages>&results=<numresults>&nextPageToken=<token>
+Sample Response
+{"nextPageToken": 2, 
+"resultSizeEstimate": 2, 
+"decks": 
+[
+  {"cards": 
+    [
+      {
+        "title": "card1",
+        "id": "1", 
+        "payload":
+        {
+          "data": "data1"
+        }
+      },
+      {
+        "title": "card2", 
+        "id": "2",
+        "payload":
+        {
+          "data": "data2"
+        } 
+      } 
+    "id": "1", 
+    "desc": "deck1"
+    }
+  ]
+}
+
+This returns all the decks for a user, with the card detailed info resolved.I assumed <username> as a dummy, so there is only one user. <numpages> is the number of pages to be retreived, with <numresults> results per page, and nextPageToken returns the next page of decks to be fetched. In my case, it is simply an integer pointing to the next page.	
+
+The way the API works it, we keep on incrementing nextPageToken until it is -1. For every nextPageToken we get, we call the API (1a) of vurb_api_nt.py
+We get the deck ID's from it. In case we get the deck empty, that means there are no more decks to be fetched, we exit.
+ We then use this deck id to call API(3a), which gives us all the cards of all the decks. We store these cards in a set, and then call API(4a), which gives us the detailed card info for all our cards. We then combined our deck id's with the detailed card info to present our output.
+To call the 3 API's mentioned above, I have used the get method of requests package of python.
+
+The final results of the API is stored in response.txt. 
+
+The way I have implemented pageToken param is, I supply the number of pages to fetch,numpages and number of results per page,numresults to the API, say we have a total of 100 results, and we supply numpages = 5, and numresults = 10.
+Then the first page will have results 1-10, nextPageToken=2, second page will have results 11-20, nextPageToken=3 and so on. The nextPageToken assignment is handled in the implementation of API (1a), where we check if the deck size being returned equals the numresults, or nextPageToken exceeds numpages, in both cases, that means we have finished up showing all requested results, and we set nextPageToken= -1
+nextPageToken is incremented by 1 in API (1b) to get the next set of results.
+
+To Run the code.
+
+Install requests and requests_cache by:
+
+pip install requests
+pip install requests_cache.
+
+Install Python flask as follows
+
+If you don't have virtualenv installed in your system, you can download it from https://pypi.python.org/pypi/virtualenv.
+
+$ mkdir vurb-rest-api
+
+$ cd vurb-rest-api
+
+$ virtualenv flask
+
+New python executable in flask/bin/python
+Installing setuptools............................done.
+Installing pip...................done.
+
+$ flask/bin/pip install flask
+
+Then copy over the 3 .py files into the directory.
+Make the files executable by 
+$ chmod a+x app.py
+$ ./app.py
+
+Run the file data_generator.py to generate the data to be consumed by the API
+
+Then in two separate command lines, run vurb_api_nt.py and vurb_combined_api_nt.py
+
+Open a browser, or curl the following API call
+
+http://localhost:6000/users/x/combineddecks?pages=<numpages>&results=<numresultsperpage>&nextPageToken=1
+
+I assume we can open both 5000 and 6000 ports to run our flask servers.
+
+The final response will be saved in response.txt
